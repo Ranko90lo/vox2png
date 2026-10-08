@@ -123,9 +123,9 @@ void die(const char *msg) {
 }
 
 int main(int argc, char **argv) {
-    if (argc < 3 || argc > 4 || (argc >= 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0))) {
+    if (argc < 3 || argc > 5 || (argc >= 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0))) {
         printf("Usage:\n");
-        printf("    vox2png input.vox output.png [horizontal|vertical|square|multifile]\n");
+        printf("    vox2png input.vox output.png [horizontal|vertical|square|multifile] [rotate180]\n");
         printf("\n");
         printf("  * The third argument specifies how the cells will be packed in the sprite sheet\n");
         printf("      * horizontal puts all cells next to each other on the X axis of the sprite sheet\n");
@@ -133,20 +133,24 @@ int main(int argc, char **argv) {
         printf("      * square goes left->right and top->bottom, like Minecraft's terrain.png\n");
         printf("      * multifile makes a different file for each cell, don't put .png after the output file in this mode\n");
         printf("        The default option is horizontal\n");
+        printf("  * rotate180 rotates every cell by 180 degrees, keeping the cell order\n");
         exit(0);
     }
     packMode mode = HORIZONTAL;
+    int rotate180 = 0;
     char *voxPath = argv[1];
     char *pngPath = argv[2];
-    if (argc == 4) {
-        if (strcmp(argv[3], "horizontal") == 0) {
+    for (int a = 3; a < argc; ++a) {
+        if (strcmp(argv[a], "horizontal") == 0) {
             mode = HORIZONTAL;
-        } else if (strcmp(argv[3], "vertical") == 0) {
+        } else if (strcmp(argv[a], "vertical") == 0) {
             mode = VERTICAL;
-        } else if (strcmp(argv[3], "square") == 0) {
+        } else if (strcmp(argv[a], "square") == 0) {
             mode = SQUARE;
-        } else if (strcmp(argv[3], "multifile") == 0) {
+        } else if (strcmp(argv[a], "multifile") == 0) {
             mode = MULTIFILE;
+        } else if (strcmp(argv[a], "rotate180") == 0) {
+            rotate180 = 1;
         } else {
             die("Invalid packing mode");
         }
@@ -261,6 +265,10 @@ voxelsFound:
 
         int dataX = currentVoxel.x;
         int dataY = currentVoxel.y;
+        if (rotate180) {
+            dataX = voxXDim - 1 - dataX;
+            dataY = voxYDim - 1 - dataY;
+        }
         dataX += currentVoxel.z % xCells * voxXDim;
         dataY += currentVoxel.z / xCells * voxYDim;
         int dataIndex = dataX + dataY * pngWidth;
